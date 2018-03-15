@@ -1,11 +1,14 @@
-from keras.optimizers import Nadam
+from keras.optimizers import Adam,SGD
 from keras.utils import to_categorical
 from keras.models import Sequential
+from keras import losses
+from keras import metrics
 from keras.preprocessing.image import ImageDataGenerator
 from keras.layers.core import Flatten, Dense, Dropout
 from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2D
 from keras.optimizers import SGD
 from keras.layers import Input
+from keras.callbacks import ModelCheckpoint,EarlyStopping
 import image_crop
 import os
 import cv2
@@ -74,8 +77,12 @@ if __name__ == '__main__':
 
     model = VGG_16()
 
-    model.compile(optimizer="adam",loss='categorical_crossentropy',metrics=['accuracy'])
-    model.fit(x_train_resized,y,epochs=50,batch_size=5)
+    checkpoint = ModelCheckpoint('./saved_model/checkpoint.h5',verbose=1,save_best_only=True)
+    earlystop = EarlyStopping(verbose=1)
+
+    opt = Adam(lr=1e-5)
+    model.compile(optimizer=opt,loss=losses.categorical_crossentropy,metrics=[metrics.categorical_accuracy])
+    model.fit(x_train_resized,y,epochs=10,batch_size=36,callbacks=[checkpoint,earlystop])
 
     model_path = os.path.join(save_dir,model_name)
     weight_path = os.path.join(save_dir,weight_name)
